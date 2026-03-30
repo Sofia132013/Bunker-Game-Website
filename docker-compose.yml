@@ -1,0 +1,13 @@
+version: '3.9'
+
+services:
+  frontend:
+    container_name: bunker-frontend
+    working_dir: /app
+    build: ./front
+    ports:
+      - "${FRONTEND_PORT:-3000}:3000"
+    command: npm run dev -- --port 3000 --host 0.0.0.0
+    volumes:
+      - ./front:/app
+      - /app/node_modules
