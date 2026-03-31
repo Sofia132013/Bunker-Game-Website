@@ -6,8 +6,6 @@ export default function validPipe(schema) {
         }        
         next();
     };
-} 
-
-module.exports = validPipe;
+}
 
 
