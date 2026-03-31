@@ -4,7 +4,7 @@ import helmet from 'helmet';
 import compression from 'compression';
 import dotenv from 'dotenv';
 import validPipe from './middlewares/validPipe.js';
-import prisma from '../lib/prisma.js';
+import prisma from './lib/prisma.js';
 import Joi from 'joi';
 
 const PORT = process.env.PORT || 3000;
