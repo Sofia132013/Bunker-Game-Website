@@ -2,12 +2,11 @@ FROM node:lts
 
 WORKDIR /app
 
-COPY requirements.txt .
-
-RUN pip install -r requirements.txt
+COPY package*.json ./
+RUN npm install
 
 COPY . .
 
 EXPOSE 3000
 
-CMD []
+CMD ["npm", "run", "dev", "--", "--host"]

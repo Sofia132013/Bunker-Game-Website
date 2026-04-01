@@ -4,10 +4,22 @@ services:
   frontend:
     container_name: bunker-frontend
     working_dir: /app
-    build: ./front
+    build:
+      context: ./front
     ports:
-      - "${FRONTEND_PORT:-3000}:3000"
-    command: npm run dev -- --port 3000 --host 0.0.0.0
+      - "${FRONTEND_PORT:-3000}:${FRONTEND_PORT:-3000}"
+    command: npm run dev -- --port ${FRONTEND_PORT:-3000} --host 0.0.0.0
+    environment:
+      - NODE_ENV=development
+      - CHOKIDAR_USEPOLLING=true
+      - CHOKIDAR_INTERVAL=300
     volumes:
       - ./front:/app
       - /app/node_modules
+    restart: unless-stopped
+    networks:
+      - bunker-network
+
+networks:
+  bunker-network:
+    driver: bridge
