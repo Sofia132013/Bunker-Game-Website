@@ -13,12 +13,54 @@ services:
       - NODE_ENV=development
       - CHOKIDAR_USEPOLLING=true
       - CHOKIDAR_INTERVAL=300
+      - VITE_API_URL=${VITE_API_URL:-http://localhost:8000}
     volumes:
       - ./front:/app
       - /app/node_modules
+    depends_on:
+      - backend
     restart: unless-stopped
     networks:
       - bunker-network
+
+  backend:
+    container_name: bunker-backend
+    working_dir: /app
+    build:
+      context: ./Bunker
+    ports:
+      - "${BACKEND_PORT:-8000}:${BACKEND_PORT:-8000}"
+    command: sh -c "npx prisma generate && npx prisma migrate deploy && npm run dev"
+    environment:
+      - NODE_ENV=development
+      - PORT=${BACKEND_PORT:-8000}
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-bunker_db}?schema=public
+    volumes:
+      - ./Bunker:/app
+      - /app/node_modules
+    depends_on:
+      - postgres
+    restart: unless-stopped
+    networks:
+      - bunker-network
+
+  postgres:
+    container_name: bunker-postgres
+    image: postgres:16-alpine
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER:-postgres}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
+      - POSTGRES_DB=${POSTGRES_DB:-bunker_db}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    networks:
+      - bunker-network
+
+volumes:
+  postgres_data:
 
 networks:
   bunker-network:
