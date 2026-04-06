@@ -4,7 +4,7 @@ import { useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import type { SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { createLobbySchema, responseLobbySchema } from "../../schemas/LobbySchemas";
+import { createLobbySchema } from "../../schemas/LobbySchemas";
 import type { CreateLobbyFormData } from "../../schemas/LobbySchemas";
 
 const CreateLobbyForm = () => {
@@ -25,13 +25,8 @@ const CreateLobbyForm = () => {
   const mutation = useMutation({
     mutationFn: createLobby,
     onSuccess: (response) => {
-        const result = responseLobbySchema.safeParse(response.data);
-        if (!result.success) {
-            console.log(result.error)
-            throw new Error("Invalid backend response");
-        }
-        navigate(`/lobby/${result.data.lobbyid}`);
-        console.log(result.data);
+        navigate(`/lobby/${response.lobbyid}`);
+        console.log(response);
     },
     onError: (error) => console.log(`an error occured ${error}`),
   });
