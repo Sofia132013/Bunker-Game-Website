@@ -7,7 +7,7 @@ import validPipe from './middlewares/validPipe.js';
 import prisma from './lib/prisma.js';
 import Joi from 'joi';
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 4000;
 const PREFIX = '/api/v1';
 
 dotenv.config();

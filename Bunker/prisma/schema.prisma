@@ -12,9 +12,66 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// Just a test to get shits going
-model User {
-  id        Int      @id @default(autoincrement())
-  username  String   @unique
-  email     String   @unique
+model Player {
+  secret_key String       @id
+  name       String       @unique
+  status     PlayerStatus @default(MIK)
+  room_id    String
+
+  room  Room   @relation(fields: [room_id], references: [id])
+  decks Deck[]
+}
+
+enum PlayerStatus {
+  MIK
+  READY
+  IN_GAME
+}
+
+model Room {
+  id          String @id @default(uuid())
+  apocalypse  String
+  host_id     String
+  max_players Int    @default(10)
+  room_name   String
+
+  apocalypseRel Apocalypse @relation(fields: [apocalypse], references: [name])
+  players       Player[]
+}
+
+model Apocalypse {
+  name String @id
+
+  rooms Room[]
+}
+
+model Deck {
+  secret_key String
+  card_id    String
+  status     DeckStatus
+
+  player Player @relation(fields: [secret_key], references: [secret_key])
+  card   Card   @relation(fields: [card_id], references: [card_id])
+
+  @@id([secret_key, card_id])
+}
+
+enum DeckStatus {
+  ACTIVE
+  NOT_ACTIVE
+}
+
+model Card {
+  card_id     String  @id
+  category    String
+  description String?
+
+  categoryRel Category @relation(fields: [category], references: [name])
+  decks       Deck[]
+}
+
+model Category {
+  name String @id
+
+  cards Card[]
 }
