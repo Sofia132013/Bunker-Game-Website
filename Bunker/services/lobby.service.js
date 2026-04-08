@@ -72,6 +72,12 @@ function markPlayerReady(roomCode, playerID) {
     playerFound.ready = true;
     return lobbyFound;
 }
+<<<<<<< HEAD
+=======
+
+
+
+>>>>>>> dc52f2f5409b07d85d6450c57dd5842db00d525c
 export default {
     createLobby,
     joinLobby,
