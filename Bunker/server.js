@@ -11,7 +11,7 @@ import generateSecretKey from './utils/generateSecretKey.js';
 
 import { Socket } from './socket/index.js';
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 4000;
 const PREFIX = '/api/v1';
 
 dotenv.config();

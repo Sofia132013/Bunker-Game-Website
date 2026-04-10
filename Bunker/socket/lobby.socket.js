@@ -2,6 +2,18 @@ import lobbyService from '../services/lobby.service.js';
 
 export default function lobbySocket(socketServer) {
     socketServer.on('connection', function (socket){
+<<<<<<< HEAD
+        console.log('New socket connected:', socket.id);
+
+        socket.on('joinRoom', function(data){
+            console.log('joinRoom event received:', data);
+        });
+
+        socket.on('playerReady', function(data){
+            console.log('playerReady event received:', data);
+        });
+=======
+>>>>>>> dc52f2f5409b07d85d6450c57dd5842db00d525c
         socket.on('joinRoom', function (data) {
             try {
                 const roomCode = data.roomCode;

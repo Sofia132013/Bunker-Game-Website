@@ -12,9 +12,98 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// Just a test to get shits going
-model User {
-  id        Int      @id @default(autoincrement())
-  username  String   @unique
-  email     String   @unique
+model Room {
+  id          String      @id @default(uuid())
+  join_code   String      @unique
+  room_name   String
+  apocalypse  String
+  host_id     String?     @unique
+  max_players Int         @default(10)
+  status      RoomStatus  @default(LOBBY)
+  created_at  DateTime    @default(now())
+  updated_at  DateTime    @updatedAt
+
+  apocalypseRel Apocalypse @relation(fields: [apocalypse], references: [name])
+  players        Player[]   @relation("RoomPlayers")
+  host           Player?    @relation("RoomHost", fields: [host_id], references: [id], onDelete: SetNull)
+
+  @@index([apocalypse])
+  @@index([status])
+}
+
+model Player {
+  id         String       @id @default(uuid())
+  secret_key String       @unique
+  name       String
+  status     PlayerStatus @default(JOINED)
+  room_id    String
+  created_at DateTime     @default(now())
+  updated_at DateTime     @updatedAt
+
+  room        Room   @relation("RoomPlayers", fields: [room_id], references: [id], onDelete: Cascade)
+  hostingRoom Room?  @relation("RoomHost")
+  decks       Deck[]
+
+  @@unique([room_id, name])
+  @@index([room_id])
+  @@index([status])
+}
+
+model Apocalypse {
+  name  String @id
+  rooms Room[]
+}
+
+model Deck {
+  player_id  String
+  card_id    String
+  status     DeckStatus @default(HIDDEN)
+  created_at DateTime   @default(now())
+  updated_at DateTime   @updatedAt
+
+  player Player @relation(fields: [player_id], references: [id], onDelete: Cascade)
+  card   Card   @relation(fields: [card_id], references: [card_id], onDelete: Cascade)
+
+  @@id([player_id, card_id])
+  @@index([card_id])
+  @@index([status])
+}
+
+model Card {
+  card_id     String  @id
+  category    String
+  description String?
+
+  categoryRel Category @relation(fields: [category], references: [name])
+  decks       Deck[]
+
+  @@index([category])
+}
+
+model Category {
+  name  String @id
+  cards Card[]
+}
+
+enum PlayerStatus {
+  JOINED
+  READY
+  PLAYING
+  DISCONNECTED
+  LEFT
+  KICKED
+}
+
+enum RoomStatus {
+  LOBBY
+  STARTING
+  IN_PROGRESS
+  FINISHED
+  CLOSED
+}
+
+enum DeckStatus {
+  HIDDEN
+  REVEALED
+  DISCARDED
 }
