@@ -6,28 +6,23 @@ import dotenv from 'dotenv';
 import validPipe from './middlewares/validPipe.js';
 import prisma from './lib/prisma.js';
 import Joi from 'joi';
+import lobbyRoutes from './routes/lobby.routes.js';
+import generateSecretKey from './utils/generateSecretKey.js';
 
-const PORT = process.env.PORT || 3000;
+import { Socket } from './socket/index.js';
+
+const PORT = process.env.PORT || 4000;
 const PREFIX = '/api/v1';
 
 dotenv.config();
 
 const app = express();
 
-function generateUniqueCode() {
-    const chars = '0123456789';
-    let code = '';
-    const length = 6;
-    for (let i = 0; i < length; i++) {
-        code += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return code;
-}
-
 app.use(cors());
 app.use(helmet());
 app.use(compression());
 app.use(express.json());
+
 app.get(`${PREFIX}/health`, (req, res) => {
     res.json({ status: 'ok',
         timestamp: new Date().toISOString(),
@@ -70,7 +65,7 @@ app.post(`${PREFIX}/users`, validPipe(userSchema), async (req, res) => {
         const user = await prisma.user.create({
         data: {
             name,
-            playerId: generateUniqueCode(),
+            playerId: generateSecretKey(),
         },
         });
         res.status(201).json(user);
@@ -80,13 +75,15 @@ app.post(`${PREFIX}/users`, validPipe(userSchema), async (req, res) => {
     }
 });
 
+app.use(`${PREFIX}/lobbies`, lobbyRoutes);
+
 const server = app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 });
 
-/*app.post(`${PREFIX}/data`, validPipe(schema), (req, res) => {
-    res.json({ message: 'Data is valid' });
-});*/
+const io = Socket(server);
+
+
 function closeServer(server) {
     return new Promise((resolve, reject) => {
         server.close(err => {

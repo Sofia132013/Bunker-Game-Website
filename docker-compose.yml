@@ -1,5 +1,3 @@
-version: '3.9'
-
 services:
   frontend:
     container_name: bunker-frontend
@@ -39,7 +37,8 @@ services:
       - ./Bunker:/app
       - /app/node_modules
     depends_on:
-      - postgres
+      postgres:
+        condition: service_started
     restart: unless-stopped
     networks:
       - bunker-network
