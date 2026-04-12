@@ -1,86 +1,123 @@
-import { error } from 'console';
-import generateRoomCode from '../utils/generateRoomCode.js';
-import generateSecretKey from '../utils/generateSecretKey.js';
-import crypto from 'crypto';
-const lobbies = new Map();
+import prisma from "../lib/prisma.js";
+import { generateJoinCode } from "../utils/generateLobbyCode.js";
+import { generateSecretKey } from "../utils/generateSecretKey.js";
 
-function createLobby(host) {
-    const id = crypto.randomUUID();
-    const roomCode = generateRoomCode();
-    const secretKey = generateSecretKey();
-    const hostID = generateSecretKey();
-
-    const lobby = {
-        id,
-        roomCode,
-        secretKey,
-        hostID,
-        players: [
-            {
-                id: hostID,
-                name: host,
-                ready: false
-            }
-        ]
-    };
-    lobbies.set(id, lobby);
-    return lobby;
+export class AppError extends Error {
+  constructor(message, statusCode = 400, code = "BAD_REQUEST") {
+    super(message);
+    this.name = "AppError";
+    this.statusCode = statusCode;
+    this.code = code;
+  }
 }
 
-function findLobby(roomCode) {
-    for (const elem of lobbies.values()){
-        if(elem.roomCode == roomCode){
-            return elem;
-        }
-    }
-
-    throw new Error("Lobby not found");
+function normalizeBaseUrl(url) {
+  return (url || "http://localhost:3000").replace(/\/+$/, "");
 }
 
-function joinLobby(roomCode, playerName){
-    const lobbyFound = findLobby(roomCode);
+function validateCreateLobbyInput(payload) {
+  const lobbyName = payload?.lobbyName?.trim();
+  const hostName = payload?.hostName?.trim();
+  const apocalypse = payload?.apocalypse?.trim();
+  const maxPlayers = payload?.maxPlayers ?? 10;
 
-    for (const player of lobbyFound.players) {
-        if (player.name === playerName) {
-            throw new Error("Player already exists in lobby");
-        }
-    }
+  if (!lobbyName) {
+    throw new AppError("lobbyName is required", 400, "LOBBY_NAME_REQUIRED");
+  }
 
-    lobbyFound.players.push({
-        id: generateSecretKey(),
-        name: playerName,
-        ready: false
-    });
-     return lobbyFound;
+  if (!hostName) {
+    throw new AppError("hostName is required", 400, "HOST_NAME_REQUIRED");
+  }
+
+  if (!Number.isInteger(maxPlayers) || maxPlayers < 2 || maxPlayers > 20) {
+    throw new AppError(
+      "maxPlayers must be an integer between 2 and 20",
+      400,
+      "INVALID_MAX_PLAYERS",
+    );
+  }
+
+  return {
+    lobbyName,
+    hostName,
+    apocalypse,
+    maxPlayers,
+  };
 }
 
-function markPlayerReady(roomCode, playerID) {
-    const lobbyFound = findLobby(roomCode);
-    let playerFound = null;
-    for (const player of lobbyFound.players) {
-        if (player.id === playerID) {
-            playerFound = player;
-            break;
-        }
+export async function createLobbyWithHost(payload) {
+  const { lobbyName, hostName, apocalypse, maxPlayers } =
+    validateCreateLobbyInput(payload);
+
+  const frontendUrl = normalizeBaseUrl(process.env.FRONTEND_URL);
+
+  for (let attempt = 0; attempt < 10; attempt += 1) {
+    try {
+      const result = await prisma.$transaction(async (tx) => {
+        const joinCode = generateJoinCode();
+        const hostSecretKey = generateSecretKey();
+
+        const lobby = await tx.lobby.create({
+          data: {
+            join_code: joinCode,
+            lobby_name: lobbyName,
+            max_players: maxPlayers,
+            status: "LOBBY",
+            apocalypseRel: {
+              connectOrCreate: {
+                where: { name: apocalypse },
+                create: { name: apocalypse },
+              },
+            },
+          },
+        });
+
+        const host = await tx.player.create({
+          data: {
+            name: hostName,
+            secret_key: hostSecretKey,
+            status: "JOINED",
+            lobby_id: lobby.id,
+          },
+        });
+
+        const updatedLobby = await tx.lobby.update({
+          where: { id: lobby.id },
+          data: {
+            host_id: host.id,
+          },
+        });
+
+        return {
+          lobbyId: updatedLobby.id,
+          lobbyName: updatedLobby.lobby_name,
+          joinCode: updatedLobby.join_code,
+          joinUrl: `${frontendUrl}/join/${updatedLobby.join_code}`,
+          apocalypse: updatedLobby.apocalypse,
+          maxPlayers: updatedLobby.max_players,
+          lobbyStatus: updatedLobby.status,
+          host: {
+            id: host.id,
+            name: host.name,
+            secretKey: host.secret_key,
+            status: host.status,
+          },
+        };
+      });
+
+      return result;
+    } catch (error) {
+      if (error?.code === "P2002") {
+        continue;
+      }
+
+      throw error;
     }
-    if (!playerFound) {
-        throw new Error("Player not found");
-    }
-    if (playerFound.ready === true) {
-        throw new Error("Player already ready");
-    }
-    playerFound.ready = true;
-    return lobbyFound;
+  }
+
+  throw new AppError(
+    "Could not create a unique join code. Please try again.",
+    500,
+    "JOIN_CODE_GENERATION_FAILED",
+  );
 }
-<<<<<<< HEAD
-=======
-
-
-
->>>>>>> dc52f2f5409b07d85d6450c57dd5842db00d525c
-export default {
-    createLobby,
-    joinLobby,
-    markPlayerReady,
-    lobbies
-};

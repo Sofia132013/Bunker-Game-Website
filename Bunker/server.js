@@ -9,7 +9,6 @@ import Joi from 'joi';
 import lobbyRoutes from './routes/lobby.routes.js';
 import generateSecretKey from './utils/generateSecretKey.js';
 
-import { Socket } from './socket/index.js';
 
 const PORT = process.env.PORT || 4000;
 const PREFIX = '/api/v1';
@@ -81,7 +80,7 @@ const server = app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 });
 
-const io = Socket(server);
+// const io = Socket(server);
 
 
 function closeServer(server) {
