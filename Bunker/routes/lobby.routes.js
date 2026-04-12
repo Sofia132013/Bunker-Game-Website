@@ -1,29 +1,17 @@
-import express from 'express';
-import { createLobby, joinLobby } from '../controllers/lobby.controller.js';
+import Joi from 'joi';
+import { Router } from 'express';
 import validPipe from '../middlewares/validPipe.js';
-import { createLobbySchema, joinLobbySchema } from '../validators/lobby.validator.js';
-import lobbyService from '../services/lobby.service.js';
+import { createLobby } from '../controllers/lobby.controller.js';
 
-const router = express.Router();
+const router = Router();
+
+const createLobbySchema = Joi.object({
+  lobbyName: Joi.string().trim().required(),
+  hostName: Joi.string().trim().required(),
+  apocalypse: Joi.string().trim().required(),
+  maxPlayers: Joi.number().integer().min(2).max(20).default(10),
+});
 
 router.post('/', validPipe(createLobbySchema), createLobby);
-router.post('/join', validPipe(joinLobbySchema), joinLobby);
-
-/*Test*/
-/*
-router.post('/ready', (req, res) => {
-    try {
-        const roomCode = req.body.roomCode;
-        const name = req.body.name;
-
-        const lobby = lobbyService.markPlayerReady(roomCode, name);
-
-        return res.json(lobby);
-    } catch (err) {
-        return res.status(400).json({ error: err.message });
-    }
-});
-*/
-/*Test*/
 
 export default router;

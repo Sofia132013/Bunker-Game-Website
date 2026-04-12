@@ -12,22 +12,21 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Room {
-  id          String      @id @default(uuid())
-  join_code   String      @unique
-  room_name   String
+model Lobby {
+  id          String     @id @default(uuid())
+  join_code   String     @unique
+  lobby_name   String
   apocalypse  String
-  host_id     String?     @unique
-  max_players Int         @default(10)
-  status      RoomStatus  @default(LOBBY)
-  created_at  DateTime    @default(now())
-  updated_at  DateTime    @updatedAt
+  host_id     String?    @unique
+  max_players Int        @default(10)
+  status      LobbyStatus @default(LOBBY)
+  created_at  DateTime   @default(now())
+  updated_at  DateTime   @updatedAt
 
   apocalypseRel Apocalypse @relation(fields: [apocalypse], references: [name])
-  players        Player[]   @relation("RoomPlayers")
-  host           Player?    @relation("RoomHost", fields: [host_id], references: [id], onDelete: SetNull)
+  players       Player[]   @relation("LobbyPlayers")
+  host          Player?    @relation("LobbyHost", fields: [host_id], references: [id], onDelete: SetNull)
 
-  @@index([apocalypse])
   @@index([status])
 }
 
@@ -36,22 +35,16 @@ model Player {
   secret_key String       @unique
   name       String
   status     PlayerStatus @default(JOINED)
-  room_id    String
-  created_at DateTime     @default(now())
-  updated_at DateTime     @updatedAt
+  lobby_id    String
 
-  room        Room   @relation("RoomPlayers", fields: [room_id], references: [id], onDelete: Cascade)
-  hostingRoom Room?  @relation("RoomHost")
+  lobby        Lobby   @relation("LobbyPlayers", fields: [lobby_id], references: [id], onDelete: Cascade)
+  hostingLobby Lobby?  @relation("LobbyHost")
   decks       Deck[]
-
-  @@unique([room_id, name])
-  @@index([room_id])
-  @@index([status])
 }
 
 model Apocalypse {
   name  String @id
-  rooms Room[]
+  lobbys Lobby[]
 }
 
 model Deck {
@@ -94,7 +87,7 @@ enum PlayerStatus {
   KICKED
 }
 
-enum RoomStatus {
+enum LobbyStatus {
   LOBBY
   STARTING
   IN_PROGRESS
