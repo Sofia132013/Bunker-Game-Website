@@ -8,6 +8,7 @@ import prisma from './lib/prisma.js';
 import Joi from 'joi';
 import lobbyRoutes from './routes/lobby.routes.js';
 import generateSecretKey from './utils/generateSecretKey.js';
+import cardRoutes from './routes/card.routes.js';
 
 
 const PORT = process.env.PORT || 4000;
@@ -75,6 +76,7 @@ app.post(`${PREFIX}/users`, validPipe(userSchema), async (req, res) => {
 });
 
 app.use(`${PREFIX}/lobbies`, lobbyRoutes);
+app.use(`${PREFIX}/cards`, cardRoutes);
 
 const server = app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
