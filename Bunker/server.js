@@ -77,6 +77,7 @@ app.post(`${PREFIX}/users`, validPipe(userSchema), async (req, res) => {
 
 app.use(`${PREFIX}/lobbies`, lobbyRoutes);
 app.use(`${PREFIX}/cards`, cardRoutes);
+app.use(`${PREFIX}/images`, express.static('/images'));
 
 const server = app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);

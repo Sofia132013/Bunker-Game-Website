@@ -66,6 +66,7 @@ model Card {
   card_id     String  @id
   category    String
   description String?
+  imageUrl    String?
 
   categoryRel Category @relation(fields: [category], references: [name])
   decks       Deck[]

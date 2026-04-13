@@ -26,7 +26,8 @@ async function createCard(data) {
         data: {
             card_id: crypto.randomUUID(),
             category: data.category,
-            description: data.description
+            description: data.description,
+            imageUrl: data.imageUrl || null 
         }
     });
 }

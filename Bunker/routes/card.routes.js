@@ -12,8 +12,10 @@ const router = Router();
 
 const createCardSchema = Joi.object({
   category: Joi.string().trim().required(),
-  description: Joi.string().trim().required()
+  description: Joi.string().trim().required(),
+  imageUrl: Joi.string().optional()
 });
+
 const updateCardSchema = Joi.object({
   category: Joi.string().trim(),
   description: Joi.string().trim()
